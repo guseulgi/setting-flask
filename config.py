@@ -11,7 +11,7 @@ class AppConfig:
 
     SESSION_TYPE = 'redis'
     SESSION_USE_SIGNER = True
-    SESSION_REDIS = redis.from_url('redis://localhost:6379')
+    SESSION_REDIS = redis.from_url(f'redis://{os.getenv('RD_URL')}')
     
     SESSION_PERMANENT = True
     PERMENENT_SESSION_LIFETIME = timedelta(minutes=1)
