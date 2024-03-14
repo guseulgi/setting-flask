@@ -15,5 +15,12 @@ class User(db.Model):
         self.user_email = email
         self.user_password = bcrypt.generate_password_hash(password)
 
+    """ 아이디 리턴 함수 """
+
     def getId(self):
         return self.user_id
+
+    """ 비밀번호 확인 함수 """
+
+    def checkPw(self, user_password):
+        return bcrypt.check_password_hash(user_password, self.user_password)
