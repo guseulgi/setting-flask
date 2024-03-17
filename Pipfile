@@ -10,7 +10,9 @@ flask-cors = "*"
 flask-session = "*"
 sqlalchemy = "*"
 redis = "*"
-flask-dotenv = "*"
+flask-bcrypt = "*"
+flask-sqlalchemy = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

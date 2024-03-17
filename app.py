@@ -1,11 +1,9 @@
-from Flask import Flask
+from flask import Flask
 from flask_session import Session
 from flask_restx import Api
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
-
-from routes.signin import Signin
 
 from config import AppConfig
 
@@ -31,6 +29,8 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+
+    from routes.signin import Signin
 
     api.add_namespace(Signin, '/api/signin')
 
