@@ -13,6 +13,7 @@ redis = "*"
 flask-bcrypt = "*"
 flask-sqlalchemy = "*"
 python-dotenv = "*"
+psycopg2 = "*"
 
 [dev-packages]
 
