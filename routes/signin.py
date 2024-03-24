@@ -52,16 +52,25 @@ class GetSession(Resource):
 class Signup(Resource):
     def post(self):
         """ 회원가입 API """
-        request_result = request.json['userInfo']
-        request_nickname = request_result.get('nickname')
-        request_email = request_result.get('email')
-        request_password = request_result.get('password')
-        request_is_email = request_result.get('is_email')
+        try:
+            request_result = request.json['userInfo']
+            request_nickname = request_result.get('nickname')
+            request_email = request_result.get('email')
+            request_password = request_result.get('password')
+            request_is_email = request_result.get('is_email')
 
-        user = User(nickname=request_nickname,
-                    email=request_email, password=request_password, is_email=request_is_email)
+            user = User(nickname=request_nickname,
+                        email=request_email, password=request_password, is_email=request_is_email)
+            db.session.add(user)
 
-        db.session.add(user)
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "payload": {
+                    "message": e
+                }
+            })
+
         db.session.commit()
 
         return jsonify({
@@ -73,9 +82,22 @@ class Signup(Resource):
 
 
 @Signin.route('/signin')
-class Logout(Resource):
+class Login(Resource):
     def post(self):
         """로그인 API"""
+        user_info = request.json['user_info']
+        user_id = user_info.get('user_id')
+
+        try:
+            find_user = User.query.filter(User.user_id == user_id).one()
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "payload": {
+                    "message": f"Fail log in - {e}"
+                }
+            })
+
         return jsonify({
             "success": True,
             "payload": {

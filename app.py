@@ -27,11 +27,13 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
 
+    # Models
     from models.users import User
 
     with app.app_context():
         db.create_all()
 
+    # Route
     from routes.signin import Signin
 
     api.add_namespace(Signin, '/api/users')
