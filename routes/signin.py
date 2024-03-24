@@ -3,7 +3,7 @@ from flask_restx import Resource, Namespace
 from sqlalchemy import exc
 
 from app import db
-from models.users import User
+from models.users import User, checkPw
 
 Signin = Namespace('Signin')
 
@@ -43,7 +43,7 @@ class GetSession(Resource):
             "success": True,
             "payload": {
                 "meassage": "Collect User",
-                "userInfo": result
+                "user_Info": result
             }
         })
 
@@ -87,9 +87,18 @@ class Login(Resource):
         """로그인 API"""
         user_info = request.json['user_info']
         user_id = user_info.get('user_id')
+        isPw = checkPw(user_info.get('user_pw'))
 
         try:
             find_user = User.query.filter(User.user_id == user_id).one()
+
+            if not isPw:
+                return jsonify({
+                    "success": False,
+                    "payload": {
+                        "message": f"Fail log in - Invalid password"
+                    }
+                })
         except Exception as e:
             return jsonify({
                 "success": False,
@@ -101,7 +110,8 @@ class Login(Resource):
         return jsonify({
             "success": True,
             "payload": {
-                "message": "Log in OK"
+                "message": "Log in OK",
+                "user_info": find_user
             }
         })
 
