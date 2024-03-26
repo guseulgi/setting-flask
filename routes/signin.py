@@ -3,7 +3,7 @@ from flask_restx import Resource, Namespace
 from sqlalchemy import exc
 
 from app import db
-from models.users import User, checkPw
+from models.users import User
 
 Signin = Namespace('Signin')
 
@@ -53,7 +53,7 @@ class Signup(Resource):
     def post(self):
         """ 회원가입 API """
         try:
-            request_result = request.json['userInfo']
+            request_result = request.json['user_info']
             request_nickname = request_result.get('nickname')
             request_email = request_result.get('email')
             request_password = request_result.get('password')
@@ -87,7 +87,7 @@ class Login(Resource):
         """로그인 API"""
         user_info = request.json['user_info']
         user_id = user_info.get('user_id')
-        isPw = checkPw(user_info.get('user_pw'))
+        isPw = User.checkPw(user_info.get('user_pw'))
 
         try:
             find_user = User.query.filter(User.user_id == user_id).one()

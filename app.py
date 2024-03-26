@@ -23,7 +23,7 @@ def create_app():
               license="MIT")
 
     Session(app)
-    CORS(app)
+    CORS(app, supports_credentials=True)
     db.init_app(app)
     bcrypt.init_app(app)
 
