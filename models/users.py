@@ -16,7 +16,8 @@ class User(db.Model):
         self.user_id = randomStr()
         self.user_nickname = nickname
         self.user_email = email
-        self.user_password = bcrypt.generate_password_hash(password)
+        self.user_password = bcrypt.generate_password_hash(
+            password).decode('utf8')
         self.user_is_email = is_email
 
     """ 아이디 리턴 함수 """
@@ -27,4 +28,4 @@ class User(db.Model):
     """ 비밀번호 확인 함수 """
 
     def checkPw(self, user_password):
-        return bcrypt.check_password_hash(user_password, self.user_password)
+        return bcrypt.check_password_hash(self.user_password, user_password)

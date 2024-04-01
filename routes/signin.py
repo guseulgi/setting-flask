@@ -86,11 +86,18 @@ class Login(Resource):
     def post(self):
         """로그인 API"""
         user_info = request.json['user_info']
-        user_id = user_info.get('user_id')
-        isPw = User.checkPw(user_info.get('user_pw'))
 
         try:
-            find_user = User.query.filter(User.user_id == user_id).one()
+            print('user_info.get(password)', user_info.get('password'))
+            print('user_info.get(email)', user_info.get('email'))
+
+            find_user = User.query.filter(
+                User.user_email == user_info.get('email')).one()
+            isPw = User.checkPw(find_user,
+                                user_info.get('password'))
+
+            print('isPw', isPw)
+            print('find_user', find_user.user_password)
 
             if not isPw:
                 return jsonify({
@@ -111,7 +118,7 @@ class Login(Resource):
             "success": True,
             "payload": {
                 "message": "Log in OK",
-                "user_info": find_user
+                # "user_info": find_user
             }
         })
 

@@ -9,6 +9,7 @@ from config import AppConfig
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
+cors = CORS()
 
 
 def create_app():
@@ -23,7 +24,9 @@ def create_app():
               license="MIT")
 
     Session(app)
-    CORS(app, supports_credentials=True)
+    # CORS(app, supports_credentials=True,
+    #      resources={r"*": {"origins": "*"}})
+    cors.init_app(app, supports_credentials=True)
     db.init_app(app)
     bcrypt.init_app(app)
 
