@@ -85,19 +85,17 @@ class Signup(Resource):
 class Login(Resource):
     def post(self):
         """로그인 API"""
+
         user_info = request.json['user_info']
 
         try:
-            print('user_info.get(password)', user_info.get('password'))
-            print('user_info.get(email)', user_info.get('email'))
 
             find_user = User.query.filter(
-                User.user_email == user_info.get('email')).one()
+                User.user_email == user_info.get('email')).one_or_none()
             isPw = User.checkPw(find_user,
                                 user_info.get('password'))
 
-            print('isPw', isPw)
-            print('find_user', find_user.user_password)
+            session['userId'] = find_user.user_id
 
             if not isPw:
                 return jsonify({
@@ -118,7 +116,11 @@ class Login(Resource):
             "success": True,
             "payload": {
                 "message": "Log in OK",
-                # "user_info": find_user
+                "user_info": {
+                    "id": find_user.user_id,
+                    "nickname": find_user.user_nickname,
+                    "email": find_user.user_email
+                }
             }
         })
 
