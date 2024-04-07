@@ -18,6 +18,17 @@ mresponse = Signin.model('응답 모델', {
     "payload": fields.Nested(mpayload)
 })
 
+muser_payload = Signin.model('유저 정보 모델', {
+    "nickname": fields.String(),
+    "id": fields.String(),
+    "email": fields.String(),
+})
+
+muser_response = Signin.model('유저 모델', {
+    "success": fields.String(description='성공 여부', required=True),
+    "payload": fields.Nested(muser_payload)
+})
+
 # Request Models
 msignin = Signin.model('회원가입 모델', {
     "user_info": fields.Nested(Signin.model('회원가입 정보', {
@@ -38,23 +49,20 @@ mlogin = Signin.model('로그인 모델', {
 
 # APIs
 @Signin.route('/session')
-@Signin.doc(responses={
-    200: '성공',
-    500: '알 수 없는 오류'
-})
 class GetSession(Resource):
-    @Signin.marshal_with(mresponse)
+    @Signin.response(model=muser_response, code=200, description='세션 검증 성공')
+    @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
     def get(self):
         """세션 확인 API"""
-        user_id = session['user_id']
+        user_id = session['userId']
 
         try:
             result = User.query.filter(User.user_id == user_id).one()
-        except exc.SQLAlchemyError as e:
+        except Exception as e:
             return {
                 "success": False,
                 "payload": {
-                    "meassage": type(e),
+                    "meassage": e,
                 }
             }, 500
 
@@ -62,18 +70,18 @@ class GetSession(Resource):
             "success": True,
             "payload": {
                 "meassage": "Collect User",
+                "id": result.user_id,
+                "nickname": result.user_nickname,
+                "email": result.user_email
             }
         }, 200
 
 
 @Signin.route('/signup')
-@Signin.doc(responses={
-    200: '성공',
-    500: '알 수 없는 오류'
-})
 class Signup(Resource):
     @Signin.expect(msignin)
-    @Signin.marshal_with(mresponse)
+    @Signin.response(model=mresponse, code=200, description='회원가입 성공')
+    @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
     def post(self):
         """ 회원가입 API """
         try:
@@ -105,14 +113,11 @@ class Signup(Resource):
 
 
 @Signin.route('/signin')
-@Signin.doc(responses={
-    200: '성공',
-    500: '알 수 없는 오류',
-    501: '입력 불일치'
-})
 class Login(Resource):
     @Signin.expect(mlogin)
-    @Signin.marshal_with(mresponse)
+    @Signin.response(model=mresponse, code=200, description='로그인 성공')
+    @Signin.response(model=mresponse, code=400, description='사용자 입력 오류')
+    @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
     def post(self):
         """로그인 API"""
         user_info = request.json['user_info']
@@ -124,6 +129,8 @@ class Login(Resource):
                                 user_info.get('password'))
 
             session['userId'] = find_user.user_id
+            print("session['userId']", session['userId'])
+            # TODO 세션이 쿠키로 넘어가지 않음
 
             if not isPw:
                 return {
@@ -149,11 +156,8 @@ class Login(Resource):
 
 
 @Signin.route('/signout')
-@Signin.doc(responses={
-    200: '성공'
-})
 class Logout(Resource):
-    @Signin.marshal_with(mresponse)
+    @Signin.response(model=mresponse, code=200, description='로그아웃 성공')
     def post(self):
         """로그아웃 API"""
         user_id = session['user_id']

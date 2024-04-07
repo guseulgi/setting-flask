@@ -39,7 +39,7 @@ def create_app():
     # Route
     from routes.signin import Signin
 
-    api.add_namespace(Signin, '/api/users')
+    api.add_namespace(Signin, '/api/user')
 
     return app
 
