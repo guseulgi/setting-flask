@@ -1,4 +1,4 @@
-from flask import request, jsonify, session
+from flask import request, session
 from flask_restx import Resource, Namespace, fields
 from sqlalchemy import exc
 
@@ -54,7 +54,18 @@ class GetSession(Resource):
     @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
     def get(self):
         """세션 확인 API"""
-        user_id = session['userId']
+        print('session', session)
+        print(session['userId'], "session['userId']")
+
+        if 'userId' in session:
+            user_id = session['userId']
+        else:
+            return {
+                "success": False,
+                "payload": {
+                    "meassage": 'No session',
+                }
+            }, 501
 
         try:
             result = User.query.filter(User.user_id == user_id).one()
@@ -128,10 +139,6 @@ class Login(Resource):
             isPw = User.checkPw(find_user,
                                 user_info.get('password'))
 
-            session['userId'] = find_user.user_id
-            print("session['userId']", session['userId'])
-            # TODO 세션이 쿠키로 넘어가지 않음
-
             if not isPw:
                 return {
                     "success": False,
@@ -139,20 +146,25 @@ class Login(Resource):
                         "message": f"Fail log in - Invalid password"
                     }
                 }, 501
+
+            session['userId'] = find_user.user_id
+            print("session['userId']", session['userId'])
+            # TODO 세션이 쿠키로 넘어가지 않음??
+            db.session.commit()
+
+            return {
+                "success": True,
+                "payload": {
+                    "message": "Log in OK",
+                }
+            }, 200
         except Exception as e:
             return {
                 "success": False,
                 "payload": {
-                    "message": f"Fail log in - {e}"
+                    "message": f"{e}"
                 }
             }, 500
-
-        return {
-            "success": True,
-            "payload": {
-                "message": "Log in OK",
-            }
-        }, 200
 
 
 @Signin.route('/signout')

@@ -24,8 +24,6 @@ def create_app():
               license="MIT")
 
     Session(app)
-    # CORS(app, supports_credentials=True,
-    #      resources={r"*": {"origins": "*"}})
     cors.init_app(app, supports_credentials=True)
     db.init_app(app)
     bcrypt.init_app(app)
@@ -46,4 +44,6 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    app.config.update(SESSION_COOKIE_SAMESITE="None",
+                      SESSION_COOKIE_SECURE=True)
     app.run(debug=True)
