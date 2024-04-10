@@ -88,12 +88,12 @@ class GetSession(Resource):
         }, 200
 
 
-@Signin.route('/signup')
-class Signup(Resource):
+@Signin.route('/<user_id>')
+class UsersAPI(Resource):
     @Signin.expect(msignin)
     @Signin.response(model=mresponse, code=200, description='회원가입 성공')
     @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
-    def post(self):
+    def post(self, user_id):
         """ 회원가입 API """
         try:
             request_result = request.json['user_info']
@@ -122,9 +122,34 @@ class Signup(Resource):
             }
         }, 200
 
+    def put(self, user_id):
+        """사용자 수정 API"""
 
-@Signin.route('/signin')
-class Login(Resource):
+    def delete(self, user_id):
+        """사용자 삭제 API"""
+
+
+@Signin.route('')
+class UserAPI(Resource):
+    def get(self):
+        """전체 사용자 리스트 조회 API"""
+
+
+@Signin.route('/auth')
+class Auth(Resource):
+    @Signin.response(model=mresponse, code=200, description='로그아웃 성공')
+    def get(self):
+        """로그아웃 API"""
+        user_id = session['user_id']
+        session.pop(user_id)
+
+        return {
+            "success": True,
+            "payload": {
+                "message": "Log out OK"
+            }
+        }, 200
+
     @Signin.expect(mlogin)
     @Signin.response(model=mresponse, code=200, description='로그인 성공')
     @Signin.response(model=mresponse, code=400, description='사용자 입력 오류')
@@ -165,19 +190,3 @@ class Login(Resource):
                     "message": f"{e}"
                 }
             }, 500
-
-
-@Signin.route('/signout')
-class Logout(Resource):
-    @Signin.response(model=mresponse, code=200, description='로그아웃 성공')
-    def post(self):
-        """로그아웃 API"""
-        user_id = session['user_id']
-        session.pop(user_id)
-
-        return {
-            "success": True,
-            "payload": {
-                "message": "Log out OK"
-            }
-        }, 200

@@ -44,6 +44,6 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.config.update(SESSION_COOKIE_SAMESITE="None",
-                      SESSION_COOKIE_SECURE=True)
+    # app.config.update(SESSION_COOKIE_SAMESITE="None",
+    #                   SESSION_COOKIE_SECURE=True)
     app.run(debug=True)
