@@ -141,7 +141,7 @@ class Auth(Resource):
     def get(self):
         """로그아웃 API"""
         user_id = session['user_id']
-        session.pop(user_id)
+        session.pop(user_id, None)
 
         return {
             "success": True,
