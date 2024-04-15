@@ -33,9 +33,9 @@ def create_app():
         db.create_all()
 
     # Route
-    from routes.signin import Signin
+    from routes.signin import user_router
 
-    api.add_namespace(Signin, '/api/users')
+    api.add_namespace(user_router, '/api/users')
 
     return app
 

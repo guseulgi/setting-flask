@@ -5,33 +5,33 @@ from sqlalchemy import exc
 from app import db
 from models.users import User
 
-Signin = Namespace('Signin')
+user_router = Namespace('Users')
 
 # Models
 # Response Models
-mpayload = Signin.model('페이로드 모델', {
+mpayload = user_router.model('페이로드 모델', {
     "message": fields.String(description='메세지', required=True)
 })
 
-mresponse = Signin.model('응답 모델', {
+mresponse = user_router.model('응답 모델', {
     "success": fields.String(description='성공 여부', required=True),
     "payload": fields.Nested(mpayload)
 })
 
-muser_payload = Signin.model('유저 정보 모델', {
+muser_payload = user_router.model('유저 정보 모델', {
     "nickname": fields.String(),
     "id": fields.String(),
     "email": fields.String(),
 })
 
-muser_response = Signin.model('유저 모델', {
+muser_response = user_router.model('유저 모델', {
     "success": fields.String(description='성공 여부', required=True),
     "payload": fields.Nested(muser_payload)
 })
 
 # Request Models
-msignin = Signin.model('회원가입 모델', {
-    "user_info": fields.Nested(Signin.model('회원가입 정보', {
+msignin = user_router.model('회원가입 모델', {
+    "user_info": fields.Nested(user_router.model('회원가입 정보', {
         "nickname": fields.String(description='닉네임'),
         "email": fields.String(description='이메일'),
         "password": fields.String(description='비밀번호'),
@@ -39,8 +39,8 @@ msignin = Signin.model('회원가입 모델', {
     }))
 })
 
-mlogin = Signin.model('로그인 모델', {
-    "user_info": fields.Nested(Signin.model('로그인 정보', {
+mlogin = user_router.model('로그인 모델', {
+    "user_info": fields.Nested(user_router.model('로그인 정보', {
         "email": fields.String(description='이메일'),
         "password": fields.String(description='비밀번호'),
     }))
@@ -48,13 +48,15 @@ mlogin = Signin.model('로그인 모델', {
 
 
 # APIs
-@Signin.route('/session')
+@user_router.route('/session')
 class GetSession(Resource):
-    @Signin.response(model=muser_response, code=200, description='세션 검증 성공')
-    @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
+    @user_router.response(model=muser_response, code=200, description='세션 검증 성공')
+    @user_router.response(model=mresponse, code=501, description='세션 없음')
+    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
     def get(self):
         """세션 확인 API"""
         print('session', session)
+        print(session.get('userId'), '?')
         print(session['userId'], "session['userId']")
 
         if 'userId' in session:
@@ -88,11 +90,11 @@ class GetSession(Resource):
         }, 200
 
 
-@Signin.route('/<user_id>')
+@user_router.route('/<user_id>')
 class UsersAPI(Resource):
-    @Signin.expect(msignin)
-    @Signin.response(model=mresponse, code=200, description='회원가입 성공')
-    @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
+    @user_router.expect(msignin)
+    @user_router.response(model=mresponse, code=200, description='회원가입 성공')
+    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
     def post(self, user_id):
         """ 회원가입 API """
         try:
@@ -129,15 +131,15 @@ class UsersAPI(Resource):
         """사용자 삭제 API"""
 
 
-@Signin.route('')
+@user_router.route('')
 class UserAPI(Resource):
     def get(self):
         """전체 사용자 리스트 조회 API"""
 
 
-@Signin.route('/auth')
+@user_router.route('/auth')
 class Auth(Resource):
-    @Signin.response(model=mresponse, code=200, description='로그아웃 성공')
+    @user_router.response(model=mresponse, code=200, description='로그아웃 성공')
     def get(self):
         """로그아웃 API"""
         user_id = session['user_id']
@@ -150,10 +152,10 @@ class Auth(Resource):
             }
         }, 200
 
-    @Signin.expect(mlogin)
-    @Signin.response(model=mresponse, code=200, description='로그인 성공')
-    @Signin.response(model=mresponse, code=400, description='사용자 입력 오류')
-    @Signin.response(model=mresponse, code=500, description='알 수 없는 오류')
+    @user_router.expect(mlogin)
+    @user_router.response(model=mresponse, code=200, description='로그인 성공')
+    @user_router.response(model=mresponse, code=400, description='사용자 입력 오류')
+    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
     def post(self):
         """로그인 API"""
         user_info = request.json['user_info']
