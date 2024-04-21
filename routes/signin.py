@@ -90,22 +90,23 @@ class GetSession(Resource):
         }, 200
 
 
-@user_router.route('/<user_id>')
+@user_router.route('/<user_email>')
 class UsersAPI(Resource):
     @user_router.expect(msignin)
-    @user_router.response(model=mresponse, code=200, description='회원가입 성공')
+    @user_router.response(model=mresponse, code=201, description='회원가입 성공')
     @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
-    def post(self, user_id):
+    def post(self, user_email):
         """ 회원가입 API """
         try:
             request_result = request.json['user_info']
             request_nickname = request_result.get('nickname')
-            request_email = request_result.get('email')
+            # request_email = request_result.get('email')
             request_password = request_result.get('password')
             request_is_email = request_result.get('is_email')
 
             user = User(nickname=request_nickname,
-                        email=request_email, password=request_password, is_email=request_is_email)
+                        email=user_email, password=request_password,
+                        is_email=request_is_email)
             db.session.add(user)
 
         except Exception as e:
@@ -122,12 +123,39 @@ class UsersAPI(Resource):
             "payload": {
                 "message": "Sign in OK!"
             }
-        }, 200
+        }, 201
 
-    def put(self, user_id):
+    def put(self, user_email):
         """사용자 수정 API"""
+        try:
+            request_result = request.json['user_info']
+            request_nickname = request_result.get('nickname')
+            request_password = request_result.get('password')
+            request_coment = request_result.get('coment')
 
-    def delete(self, user_id):
+            quser = User.query.filter(User.user_email == user_email)
+            cur_user = quser.one_or_none()
+            if cur_user is None:
+                return {
+                    "success": False,
+                    "payload": {
+                        "message": "No user info"
+                    }
+                }, 400
+
+            quser.update(dict(user_nickname=request_nickname,
+                              user_password=request_password, user_coment=request_coment))
+            db.session.commit()
+
+        except Exception as e:
+            return {
+                "success": False,
+                "payload": {
+                    "message": f"{e}"
+                }
+            }, 500
+
+    def delete(self, user_email):
         """사용자 삭제 API"""
 
 
