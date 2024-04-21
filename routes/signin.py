@@ -154,7 +154,7 @@ class Auth(Resource):
 
     @user_router.expect(mlogin)
     @user_router.response(model=mresponse, code=200, description='로그인 성공')
-    @user_router.response(model=mresponse, code=400, description='사용자 입력 오류')
+    @user_router.response(model=mresponse, code=401, description='사용자 입력 오류')
     @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
     def post(self):
         """로그인 API"""
@@ -172,11 +172,11 @@ class Auth(Resource):
                     "payload": {
                         "message": f"Fail log in - Invalid password"
                     }
-                }, 501
+                }, 401
 
             session['userId'] = find_user.user_id
             print("session['userId']", session['userId'])
-            # TODO 세션이 쿠키로 넘어가지 않음??
+
             db.session.commit()
 
             return {
