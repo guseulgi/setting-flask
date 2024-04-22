@@ -100,7 +100,6 @@ class UsersAPI(Resource):
         try:
             request_result = request.json['user_info']
             request_nickname = request_result.get('nickname')
-            # request_email = request_result.get('email')
             request_password = request_result.get('password')
             request_is_email = request_result.get('is_email')
 
@@ -125,6 +124,9 @@ class UsersAPI(Resource):
             }
         }, 201
 
+    @user_router.response(model=mresponse, code=200, description='사용자 수정 성공')
+    @user_router.response(model=mresponse, code=400, description='사용자 정보 없음')
+    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
     def put(self, user_email):
         """사용자 수정 API"""
         try:
@@ -146,6 +148,12 @@ class UsersAPI(Resource):
             quser.update(dict(user_nickname=request_nickname,
                               user_password=request_password, user_coment=request_coment))
             db.session.commit()
+            return {
+                "success": True,
+                "payload": {
+                    "message": "Success user modify"
+                }
+            }, 200
 
         except Exception as e:
             return {
@@ -155,8 +163,37 @@ class UsersAPI(Resource):
                 }
             }, 500
 
+    @user_router.response(model=mresponse, code=200, description='사용자 삭제 성공')
+    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
     def delete(self, user_email):
         """사용자 삭제 API"""
+        try:
+            quser = User.query.filter(User.user_email == user_email)
+            cur_user = quser.one_or_none()
+            if cur_user is None:
+                return {
+                    "success": False,
+                    "payload": {
+                        "message": "No user email"
+                    }
+                }, 400
+
+            db.session.delete(cur_user)
+
+            return {
+                "success": True,
+                "payload": {
+                    "message": "Success user delete"
+                }
+            }, 200
+
+        except Exception as e:
+            return {
+                "success": False,
+                "payload": {
+                    "message": f"{e}"
+                }
+            }, 500
 
 
 @user_router.route('')
