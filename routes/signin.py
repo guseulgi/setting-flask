@@ -48,48 +48,14 @@ mlogin = user_router.model('로그인 모델', {
 
 
 # APIs
-@user_router.route('/session')
-class GetSession(Resource):
-    @user_router.response(model=muser_response, code=200, description='세션 검증 성공')
-    @user_router.response(model=mresponse, code=501, description='세션 없음')
-    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
+# 기본
+@user_router.route('')
+class UserAPI(Resource):
     def get(self):
-        """세션 확인 API"""
-        print('session', session)
-        print(session.get('userId'), '?')
-        print(session['userId'], "session['userId']")
-
-        if 'userId' in session:
-            user_id = session['userId']
-        else:
-            return {
-                "success": False,
-                "payload": {
-                    "meassage": 'No session',
-                }
-            }, 501
-
-        try:
-            result = User.query.filter(User.user_id == user_id).one()
-        except Exception as e:
-            return {
-                "success": False,
-                "payload": {
-                    "meassage": e,
-                }
-            }, 500
-
-        return {
-            "success": True,
-            "payload": {
-                "meassage": "Collect User",
-                "id": result.user_id,
-                "nickname": result.user_nickname,
-                "email": result.user_email
-            }
-        }, 200
+        """전체 사용자 리스트 조회 API"""
 
 
+# user_email
 @user_router.route('/<user_email>')
 class UsersAPI(Resource):
     @user_router.expect(msignin)
@@ -196,27 +162,9 @@ class UsersAPI(Resource):
             }, 500
 
 
-@user_router.route('')
-class UserAPI(Resource):
-    def get(self):
-        """전체 사용자 리스트 조회 API"""
-
-
-@user_router.route('/auth')
-class Auth(Resource):
-    @user_router.response(model=mresponse, code=200, description='로그아웃 성공')
-    def get(self):
-        """로그아웃 API"""
-        user_id = session['user_id']
-        session.pop(user_id, None)
-
-        return {
-            "success": True,
-            "payload": {
-                "message": "Log out OK"
-            }
-        }, 200
-
+# 로그인
+@user_router.route('/login')
+class LoginAPI(Resource):
     @user_router.expect(mlogin)
     @user_router.response(model=mresponse, code=200, description='로그인 성공')
     @user_router.response(model=mresponse, code=401, description='사용자 입력 오류')
@@ -228,6 +176,13 @@ class Auth(Resource):
         try:
             find_user = User.query.filter(
                 User.user_email == user_info.get('email')).one_or_none()
+            if find_user is None:
+                return {
+                    "success": False,
+                    "payload": {
+                        "message": "Fail log in - Invalid email"
+                    }
+                }, 401
             isPw = User.checkPw(find_user,
                                 user_info.get('password'))
 
@@ -239,9 +194,7 @@ class Auth(Resource):
                     }
                 }, 401
 
-            session['userId'] = find_user.user_id
-            print("session['userId']", session['userId'])
-
+            session['user_id'] = find_user.user_id
             db.session.commit()
 
             return {
@@ -257,3 +210,67 @@ class Auth(Resource):
                     "message": f"{e}"
                 }
             }, 500
+
+
+# 로그아웃
+@user_router.route('/logout')
+class LogoutAPI(Resource):
+    @user_router.response(model=mresponse, code=200, description='로그아웃 성공')
+    def post(self):
+        """로그아웃 API"""
+        if 'user_id' in session:
+            session.pop('user_id', None)
+            return {
+                "success": True,
+                "payload": {
+                    "message": "Log out OK"
+                }
+            }, 200
+        else:
+            return {
+                "success": False,
+                "payload": {
+                    "message": "Log out not OK"
+                }
+            }, 500
+
+
+# 세션
+@user_router.route('/session')
+class GetSession(Resource):
+    @user_router.response(model=muser_response, code=200, description='세션 검증 성공')
+    @user_router.response(model=mresponse, code=501, description='세션 없음')
+    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
+    def get(self):
+        """세션 확인 API"""
+        print('session', session)
+
+        if 'user_id' in session:
+            user_id = session['user_id']
+        else:
+            return {
+                "success": False,
+                "payload": {
+                    "meassage": 'No session',
+                }
+            }, 501
+
+        try:
+            result = User.query.filter(User.user_id == user_id).one()
+        except Exception as e:
+            return {
+                "success": False,
+                "payload": {
+                    "meassage": e,
+                }
+            }, 500
+
+        return {
+            "success": True,
+            "payload": {
+                "meassage": "Collect User",
+                "id": result.user_id,
+                "nickname": result.user_nickname,
+                "email": result.user_email
+            }
+        }, 200
