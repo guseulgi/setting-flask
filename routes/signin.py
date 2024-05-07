@@ -30,12 +30,14 @@ muser_response = user_router.model('유저 모델', {
 })
 
 # Request Models
-msignin = user_router.model('회원가입 모델', {
+msignin = user_router.model('다이렉트 회원가입 모델', {
     "user_info": fields.Nested(user_router.model('회원가입 정보', {
         "nickname": fields.String(description='닉네임'),
         "email": fields.String(description='이메일'),
         "password": fields.String(description='비밀번호'),
         "is_email": fields.String(description='이메일 수신 여부'),
+        "description": fields.String(description='유저 설명'),
+        "prfimg": fields.String(description='프로필 이미지 경로'),
     }))
 })
 

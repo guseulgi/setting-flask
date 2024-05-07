@@ -28,6 +28,9 @@ def create_app():
 
     # Models
     from models.users import User
+    from models.products import Product
+    from models.pokes import Poke
+    from models.likes import Likelist
 
     with app.app_context():
         db.create_all()

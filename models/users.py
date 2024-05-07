@@ -1,6 +1,7 @@
 from app import bcrypt
 from app import db
 from controllers.randoms import randomStr
+from sqlalchemy.orm import relationship
 
 
 class User(db.Model):
@@ -11,9 +12,12 @@ class User(db.Model):
     user_email = db.Column(db.String, nullable=False)
     user_password = db.Column(db.String, nullable=False)
     user_is_email = db.Column(db.String(1), nullable=False, default='N')
-    user_description = db.Column(db.String, nullalble=True)
-    user_point = db.Column(db.Integer, nullalble=False, default=0)
+    user_description = db.Column(db.String, nullable=True)
+    user_point = db.Column(db.Integer, nullable=False, default=0)
     user_prfimg = db.Column(db.String, nullable=True)
+    user_level = db.Column(db.String(1), nullable=False, default='U')  # U, A
+
+    likelist = relationship("likelist")
 
     def __init__(self, nickname, email, password, is_email, description='', point=0, prfimg=None):
         self.user_id = randomStr()
