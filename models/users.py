@@ -13,13 +13,13 @@ class User(db.Model):
     user_password = db.Column(db.String, nullable=False)
     user_is_email = db.Column(db.String(1), nullable=False, default='N')
     user_description = db.Column(db.String, nullable=True)
-    user_point = db.Column(db.Integer, nullable=False, default=0)
+    user_point = db.Column(db.Integer, nullable=False, default=2000)
     user_prfimg = db.Column(db.String, nullable=True)
     user_level = db.Column(db.String(1), nullable=False, default='U')  # U, A
 
     likelist = relationship("likelist")
 
-    def __init__(self, nickname, email, password, is_email, description='', point=0, prfimg=None):
+    def __init__(self, nickname, email, password, is_email, description='', point=2000, prfimg=None):
         self.user_id = randomStr()
         self.user_nickname = nickname
         self.user_email = email
@@ -39,3 +39,8 @@ class User(db.Model):
 
     def checkPw(self, user_password):
         return bcrypt.check_password_hash(self.user_password, user_password)
+
+    """ 비밀번호 생성 함수 """
+
+    def generatePw(self, new_password):
+        return bcrypt.generate_password_hash(new_password).decode('utf8')

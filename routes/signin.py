@@ -30,21 +30,29 @@ muser_response = user_router.model('유저 모델', {
 })
 
 # Request Models
-msignin = user_router.model('다이렉트 회원가입 모델', {
+msignin = user_router.model('회원가입 모델', {
     "user_info": fields.Nested(user_router.model('회원가입 정보', {
-        "nickname": fields.String(description='닉네임'),
-        "email": fields.String(description='이메일'),
-        "password": fields.String(description='비밀번호'),
+        "nickname": fields.String(description='닉네임', required=True),
+        "email": fields.String(description='이메일', required=True),
+        "password": fields.String(description='비밀번호', required=True),
         "is_email": fields.String(description='이메일 수신 여부'),
-        "description": fields.String(description='유저 설명'),
-        "prfimg": fields.String(description='프로필 이미지 경로'),
     }))
 })
 
 mlogin = user_router.model('로그인 모델', {
     "user_info": fields.Nested(user_router.model('로그인 정보', {
-        "email": fields.String(description='이메일'),
-        "password": fields.String(description='비밀번호'),
+        "email": fields.String(description='이메일', required=True),
+        "password": fields.String(description='비밀번호', required=True),
+    }))
+})
+
+mchange = user_router.model('사용자 수정 모델', {
+    "user_info": fields.Nested(user_router.model('수정 정보', {
+        "nickname": fields.String(description='닉네임'),
+        "password": fields.String(description='패스워드'),
+        "is_email": fields.String(description='이메일 수신 여부'),
+        "prfimg": fields.String(description='프로필 이미지 경로'),
+        "description": fields.String(description='설명'),
     }))
 })
 
@@ -92,6 +100,7 @@ class UsersAPI(Resource):
             }
         }, 201
 
+    @user_router.expect(mchange)
     @user_router.response(model=mresponse, code=200, description='사용자 수정 성공')
     @user_router.response(model=mresponse, code=400, description='사용자 정보 없음')
     @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
@@ -101,7 +110,9 @@ class UsersAPI(Resource):
             request_result = request.json['user_info']
             request_nickname = request_result.get('nickname')
             request_password = request_result.get('password')
-            request_coment = request_result.get('coment')
+            request_is_email = request_result.get('is_email')
+            request_description = request_result.get('description')
+            request_prfimg = request_result.get('prfimg')
 
             quser = User.query.filter(User.user_email == user_email)
             cur_user = quser.one_or_none()
@@ -113,8 +124,21 @@ class UsersAPI(Resource):
                     }
                 }, 400
 
-            quser.update(dict(user_nickname=request_nickname,
-                              user_password=request_password, user_coment=request_coment))
+            origin_nickname = cur_user.user_nickname
+            origin_password = cur_user.user_password
+            origin_is_email = cur_user.user_is_email
+            origin_description = cur_user.user_description
+            origin_prfimg = cur_user.user_prfimg
+
+            if request_password is not None:
+                new_password = User.generatePw(cur_user, request_password)
+
+            quser.update(dict(user_nickname=request_nickname if request_nickname is not None else origin_nickname,
+                              user_password=new_password if request_password is not None else origin_password,
+                              user_is_email=request_is_email if request_is_email is not None else origin_is_email,
+                              user_description=request_description if request_description is not None else origin_description,
+                              user_prfimg=request_prfimg if request_prfimg is not None else origin_prfimg)
+                         )
             db.session.commit()
             return {
                 "success": True,
@@ -205,6 +229,7 @@ class LoginAPI(Resource):
                     "message": "Log in OK",
                 }
             }, 200
+
         except Exception as e:
             return {
                 "success": False,
@@ -222,6 +247,7 @@ class LogoutAPI(Resource):
         """로그아웃 API"""
         if 'user_id' in session:
             session.pop('user_id', None)
+
             return {
                 "success": True,
                 "payload": {
@@ -245,8 +271,6 @@ class GetSession(Resource):
     @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
     def get(self):
         """세션 확인 API"""
-        print('session', session)
-
         if 'user_id' in session:
             user_id = session['user_id']
         else:
@@ -258,7 +282,15 @@ class GetSession(Resource):
             }, 501
 
         try:
-            result = User.query.filter(User.user_id == user_id).one()
+            result = User.query.filter(User.user_id == user_id).one_or_none()
+            if result is None:
+                return {
+                    "success": False,
+                    "payload": {
+                        "meassage": 'No user ID',
+                    }
+                }
+
         except Exception as e:
             return {
                 "success": False,
@@ -273,6 +305,9 @@ class GetSession(Resource):
                 "meassage": "Collect User",
                 "id": result.user_id,
                 "nickname": result.user_nickname,
-                "email": result.user_email
+                "email": result.user_email,
+                "point": result.user_point,
+                "prfimg": result.user_prfimg,
+                "description": result.user_description
             }
         }, 200
