@@ -17,7 +17,7 @@ class User(db.Model):
     user_prfimg = db.Column(db.String, nullable=True)
     user_level = db.Column(db.String(1), nullable=False, default='U')  # U, A
 
-    likelist = relationship("likelist")
+    likelist = relationship("Likelist")
 
     def __init__(self, nickname, email, password, is_email, description='', point=2000, prfimg=None):
         self.user_id = randomStr()

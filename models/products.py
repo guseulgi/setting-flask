@@ -10,5 +10,5 @@ class Product(db.Model):
     product_type = db.Column(db.String, nullable=False)
 
 # TODO 관계성
-    likelist = relationship("likelist")
-    pokes = relationship('poke', backref="poke", uselist=False)
+    likelist = relationship("Likelist")
+    pokes = relationship('Poke', backref="poke", uselist=False)

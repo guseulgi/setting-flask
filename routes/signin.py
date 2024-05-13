@@ -75,12 +75,14 @@ class UsersAPI(Resource):
         """ 회원가입 API """
         try:
             request_result = request.json['user_info']
+            request_email = request_result.get('email')
             request_nickname = request_result.get('nickname')
             request_password = request_result.get('password')
             request_is_email = request_result.get('is_email')
 
             user = User(nickname=request_nickname,
-                        email=user_email, password=request_password,
+                        email=request_email,
+                        password=request_password,
                         is_email=request_is_email)
             db.session.add(user)
 
@@ -289,7 +291,7 @@ class GetSession(Resource):
                     "payload": {
                         "meassage": 'No user ID',
                     }
-                }
+                }, 400
 
         except Exception as e:
             return {
