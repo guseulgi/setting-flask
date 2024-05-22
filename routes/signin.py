@@ -68,6 +68,48 @@ class UserAPI(Resource):
 # user_email
 @user_router.route('/<user_email>')
 class UsersAPI(Resource):
+    @user_router.response(model=muser_response, code=200, description='세션 검증 성공')
+    @user_router.response(model=mresponse, code=501, description='세션 없음')
+    @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
+    def get(self):
+        """이미지 확인 API"""
+        if 'user_id' in session:
+            user_id = session['user_id']
+        else:
+            return {
+                "success": False,
+                "payload": {
+                    "meassage": 'No session',
+                }
+            }, 501
+
+        try:
+            result = User.query.filter(User.user_id == user_id).one_or_none()
+            if result is None:
+                return {
+                    "success": False,
+                    "payload": {
+                        "meassage": 'No user ID',
+                    }
+                }, 400
+
+        except Exception as e:
+            return {
+                "success": False,
+                "payload": {
+                    "meassage": e,
+                }
+            }, 500
+
+        return {
+            "success": True,
+            "payload": {
+                "meassage": "Collect User",
+                "id": result.user_id,
+                "prfimg": result.user_prfimg,
+            }
+        }, 200
+
     @user_router.expect(msignin)
     @user_router.response(model=mresponse, code=201, description='회원가입 성공')
     @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
@@ -110,13 +152,14 @@ class UsersAPI(Resource):
         """사용자 수정 API"""
         try:
             request_result = request.json['user_info']
+            request_email = request_result.get('email')
             request_nickname = request_result.get('nickname')
             request_password = request_result.get('password')
             request_is_email = request_result.get('is_email')
             request_description = request_result.get('description')
             request_prfimg = request_result.get('prfimg')
 
-            quser = User.query.filter(User.user_email == user_email)
+            quser = User.query.filter(User.user_email == request_email)
             cur_user = quser.one_or_none()
             if cur_user is None:
                 return {
@@ -309,7 +352,7 @@ class GetSession(Resource):
                 "nickname": result.user_nickname,
                 "email": result.user_email,
                 "point": result.user_point,
-                "prfimg": result.user_prfimg,
+                # "prfimg": result.user_prfimg,
                 "description": result.user_description
             }
         }, 200
