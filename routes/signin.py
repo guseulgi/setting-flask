@@ -71,8 +71,8 @@ class UsersAPI(Resource):
     @user_router.response(model=muser_response, code=200, description='세션 검증 성공')
     @user_router.response(model=mresponse, code=501, description='세션 없음')
     @user_router.response(model=mresponse, code=500, description='알 수 없는 오류')
-    def get(self):
-        """이미지 확인 API"""
+    def get(self, user_email):
+        """이미지  API"""
         if 'user_id' in session:
             user_id = session['user_id']
         else:
@@ -351,6 +351,7 @@ class GetSession(Resource):
                 "id": result.user_id,
                 "nickname": result.user_nickname,
                 "email": result.user_email,
+                "is_email": result.user_is_email,
                 "point": result.user_point,
                 # "prfimg": result.user_prfimg,
                 "description": result.user_description
